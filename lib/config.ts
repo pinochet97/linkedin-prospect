@@ -35,6 +35,8 @@ const schema = z.object({
   DRY_RUN: bool(true),
   HEADLESS: bool(false),
   CHROME_PROFILE_DIR: z.string().default('.data/chrome-profile'),
+  /** Caminho de um Chromium/Chrome próprio. Vazio = o que o Playwright baixou. */
+  CHROME_EXECUTABLE_PATH: z.string().optional(),
   SCREENSHOT_DIR: z.string().default('.data/screenshots'),
 
   ENABLE_DISCOVERY: bool(true),
