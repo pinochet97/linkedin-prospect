@@ -36,6 +36,7 @@ export interface CampaignRow {
   daily_message_limit: number;
   discovery_target: number;
   status: CampaignStatus;
+  paused_by_kill_switch: boolean;
   discovery_status: 'pending' | 'running' | 'done' | 'failed';
   discovery_last_run_at: Date | null;
   discovery_error: string | null;

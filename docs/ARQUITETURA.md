@@ -54,6 +54,11 @@ Duas regras que sustentam o resto:
 | `lead_messages` | Mensagens geradas/enviadas + respostas recebidas. |
 | `automation_logs` | Tudo que a automação fez, com metadata e screenshot em falhas. |
 
+Não existe tabela `users`: a autenticação é uma conta admin única com a senha
+no `.env` e um cookie assinado. Também não existe tabela de contadores
+diários — os limites são calculados a partir de `automation_logs`, com índice
+em `(action, status, created_at)`.
+
 Separar `leads` de `campaign_leads` resolve duas exigências de uma vez:
 nunca duplicar uma pessoa, e conseguir **mostrar** quando alguém já foi
 abordado em outra campanha (`findDuplicateEnrollments`).
@@ -144,6 +149,7 @@ Três camadas, nessa ordem:
 | Crash no meio da ação | o fato só é gravado após confirmação; locks expiram; retomada idempotente |
 | Custo de token | pré-filtro por regra; mensagens geradas uma vez e reaproveitadas |
 | Ação real indesejada | `DRY_RUN=true` por padrão, bloqueando o clique final dentro do adapter |
+| "Parar tudo" religando campanhas erradas | o kill switch marca quem ele pausou (`paused_by_kill_switch`); retomar devolve exatamente essas ao ar |
 | Worker caído sem ninguém notar | batimento gravado a cada ciclo em `settings.worker_last_tick_at`, exibido no dashboard |
 
 ## Observabilidade

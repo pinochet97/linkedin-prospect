@@ -190,6 +190,24 @@ suite('repositórios (integração)', () => {
     await campaigns.setCampaignStatus(id, 'paused');
   });
 
+  it('o kill switch pausa as ativas e devolve exatamente elas ao ar', async () => {
+    const active = await newCampaign('[test] kill switch ativa');
+    const manuallyPaused = await newCampaign('[test] kill switch pausada');
+    await campaigns.setCampaignStatus(active, 'active');
+    await campaigns.setCampaignStatus(manuallyPaused, 'paused');
+
+    const paused = await campaigns.pauseAllCampaigns();
+    expect(paused).toBeGreaterThanOrEqual(1);
+    expect((await campaigns.getCampaign(active))?.status).toBe('paused');
+
+    await campaigns.resumeKillSwitchedCampaigns();
+    expect((await campaigns.getCampaign(active))?.status).toBe('active');
+    // A que já estava pausada à mão continua pausada.
+    expect((await campaigns.getCampaign(manuallyPaused))?.status).toBe('paused');
+
+    await campaigns.setCampaignStatus(active, 'paused');
+  });
+
   it('conta ações do dia para o rate limit', async () => {
     const id = await newCampaign('[test] limites');
     await logs.log({ action: 'send_connection_request', status: 'success', campaignId: id });

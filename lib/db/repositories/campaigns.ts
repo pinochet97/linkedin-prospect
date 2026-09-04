@@ -68,13 +68,32 @@ export async function updateCampaign(id: string, patch: Partial<CampaignInput>):
 }
 
 export async function setCampaignStatus(id: string, status: CampaignStatus): Promise<void> {
-  await query('update campaigns set status = $1, updated_at = now() where id = $2', [status, id]);
+  // Mudança manual de status limpa a marca do kill switch: a decisão passa a
+  // ser do usuário, e "Retomar automações" não deve mexer nela.
+  await query(
+    'update campaigns set status = $1, paused_by_kill_switch = false, updated_at = now() where id = $2',
+    [status, id],
+  );
 }
 
 /** Kill switch: pausa todas as campanhas ativas. Nunca apaga nada. */
 export async function pauseAllCampaigns(): Promise<number> {
   const rows = await query<{ id: string }>(
-    "update campaigns set status = 'paused', updated_at = now() where status = 'active' returning id",
+    `update campaigns
+        set status = 'paused', paused_by_kill_switch = true, updated_at = now()
+      where status = 'active'
+      returning id`,
+  );
+  return rows.length;
+}
+
+/** Devolve ao ar exatamente as campanhas que o kill switch pausou. */
+export async function resumeKillSwitchedCampaigns(): Promise<number> {
+  const rows = await query<{ id: string }>(
+    `update campaigns
+        set status = 'active', paused_by_kill_switch = false, updated_at = now()
+      where paused_by_kill_switch = true
+      returning id`,
   );
   return rows.length;
 }

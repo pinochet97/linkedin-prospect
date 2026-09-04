@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
-import { pauseAllCampaigns } from '@/lib/db/repositories/campaigns';
+import { pauseAllCampaigns, resumeKillSwitchedCampaigns } from '@/lib/db/repositories/campaigns';
 import { log } from '@/lib/db/repositories/logs';
 import { setAutomationPaused } from '@/lib/db/repositories/settings';
 
@@ -24,7 +24,12 @@ export async function stopAllAutomations() {
 
 export async function resumeAutomations() {
   await requireAuth();
+  const resumed = await resumeKillSwitchedCampaigns();
   await setAutomationPaused(false, null);
-  await log({ action: 'kill_switch', status: 'info', message: 'Automação liberada manualmente.' });
+  await log({
+    action: 'kill_switch',
+    status: 'info',
+    message: `Automação liberada. ${resumed} campanha(s) voltaram ao ar.`,
+  });
   revalidatePath('/', 'layout');
 }
