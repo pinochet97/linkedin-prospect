@@ -169,6 +169,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <Card>
             <CardHeader>
               <CardTitle>Logs</CardTitle>
+              <Link
+                href={`/activity?lead=${enrollment.lead_id}`}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Ver no feed de atividade
+              </Link>
             </CardHeader>
             <CardContent className="p-0">
               {logs.length === 0 ? (

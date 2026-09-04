@@ -33,13 +33,19 @@ export async function processConnectionCheck(
     return;
   }
 
-  await applyFacts(enrollment.id, { connection_status: state === 'unknown' ? 'unknown' : state });
-  await log({
-    action: ACTIONS.checkConnection,
-    status: 'info',
-    campaignId: campaign.id,
-    leadId: enrollment.lead_id,
-    enrollmentId: enrollment.id,
-    message: `Ainda não aceitou (estado: ${state}).`,
-  });
+  await applyFacts(enrollment.id, { connection_status: state });
+
+  // Registrar cada verificação sem novidade inundaria o feed de atividade.
+  // O horário da última tentativa fica em `last_attempt_at`; só logamos
+  // quando o estado realmente muda.
+  if (state !== enrollment.connection_status) {
+    await log({
+      action: ACTIONS.checkConnection,
+      status: 'info',
+      campaignId: campaign.id,
+      leadId: enrollment.lead_id,
+      enrollmentId: enrollment.id,
+      message: `Convite ainda não aceito (${enrollment.connection_status} → ${state}).`,
+    });
+  }
 }

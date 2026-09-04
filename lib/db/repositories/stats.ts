@@ -31,7 +31,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
        (select count(*) from campaign_leads where created_at >= ${TODAY})::text as new_leads_today,
        (select count(*) from campaign_leads where linkedin_connection_requested_at is not null)::text as connections_requested,
        (select count(*) from campaign_leads where linkedin_connected_at is not null)::text as connections_accepted,
-       (select count(*) from lead_messages where sent_at is not null and kind <> 'inbound_reply')::text as messages_sent,
+       (select count(*) from lead_messages
+          where sent_at is not null
+            and kind in ('first_message', 'followup_1', 'followup_2'))::text as messages_sent,
        (select count(*) from campaign_leads where replied_at is not null)::text as replies,
        (select count(*) from campaign_leads where interest_status = 'interested')::text as interested,
        (select count(*) from campaign_leads where status = 'error')::text as automation_errors`,

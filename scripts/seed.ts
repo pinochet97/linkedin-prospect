@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '@/lib/load-env';
 import { closePool } from '@/lib/db/client';
 import { createCampaign, listCampaigns } from '@/lib/db/repositories/campaigns';
 import { getSettings, updateSettings } from '@/lib/db/repositories/settings';

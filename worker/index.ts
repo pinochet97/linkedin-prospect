@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '@/lib/load-env';
 import { createLinkedInAdapter } from '@/automation/linkedin';
 import { getConfig } from '@/lib/config';
 import { closePool } from '@/lib/db/client';

@@ -144,3 +144,28 @@ Três camadas, nessa ordem:
 | Crash no meio da ação | o fato só é gravado após confirmação; locks expiram; retomada idempotente |
 | Custo de token | pré-filtro por regra; mensagens geradas uma vez e reaproveitadas |
 | Ação real indesejada | `DRY_RUN=true` por padrão, bloqueando o clique final dentro do adapter |
+| Worker caído sem ninguém notar | batimento gravado a cada ciclo em `settings.worker_last_tick_at`, exibido no dashboard |
+
+## Observabilidade
+
+- **Feed de atividade** (`/activity`): toda ação vira uma linha em
+  `automation_logs`, com filtros por campanha, ação, status e lead.
+  Verificações de aceite sem novidade não são registradas de propósito — só
+  mudanças de estado — para o feed continuar legível.
+- **Falhas**: gravam `retry_count`, `last_error`, um trecho do HTML e o
+  caminho do screenshot (`.data/screenshots`). Depois de 3 falhas o lead vai
+  para `error` e espera revisão manual (`Reprocessar` na tela do lead).
+- **Batimento do worker**: cada ciclo grava `settings.worker_last_tick_at`. O
+  dashboard mostra "worker ativo" ou "worker parado", o que distingue
+  "nada aconteceu porque está tudo em dia" de "nada aconteceu porque o
+  processo caiu".
+- **Limites**: o dashboard e a tela da campanha mostram o uso do dia no
+  formato `17 / 20`.
+
+## O que este sistema deliberadamente não tem
+
+Billing, Stripe, times, workspaces, permissões, sequências de e-mail,
+enriquecimento externo, telefone, WhatsApp, integração com Sales Navigator,
+analytics avançado, scoring sofisticado, webhooks, Redis, microserviços,
+Docker, Kubernetes, agentes autônomos e CRM. Menos funcionalidades, mais
+confiabilidade.

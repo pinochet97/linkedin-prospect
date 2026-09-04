@@ -7,18 +7,27 @@ import { listLogs } from '@/lib/db/repositories/logs';
 import { listCampaigns } from '@/lib/db/repositories/campaigns';
 import { getCampaignUsageToday } from '@/lib/db/repositories/stats';
 import { describeLog } from '@/lib/activity';
-import { formatTime } from '@/lib/utils';
+import { formatRelative, formatTime } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { getSettings } from '@/lib/db/repositories/settings';
+import { getConfig } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const [stats, today, recent, campaigns] = await Promise.all([
+  const [stats, today, recent, campaigns, settings] = await Promise.all([
     getDashboardStats(),
     getTodayStats(),
     listLogs({ limit: 15 }),
     listCampaigns(),
+    getSettings(),
   ]);
+
+  // O worker escreve um batimento a cada ciclo. Sem batimento recente, ele não
+  // está rodando — e nada acontece por mais bonito que esteja o dashboard.
+  const tickSeconds = getConfig().WORKER_TICK_SECONDS;
+  const lastTick = settings.worker_last_tick_at;
+  const workerAlive = Boolean(lastTick && Date.now() - new Date(lastTick).getTime() < tickSeconds * 3000);
 
   const active = campaigns.filter((campaign) => campaign.status === 'active');
   const usage = await Promise.all(
@@ -27,7 +36,19 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Visão geral da operação." />
+      <PageHeader
+        title="Dashboard"
+        description="Visão geral da operação."
+        action={
+          <Badge tone={workerAlive ? 'success' : 'danger'}>
+            {workerAlive
+              ? `worker ativo · ${formatRelative(lastTick)}`
+              : lastTick
+                ? `worker parado · último ciclo ${formatRelative(lastTick)}`
+                : 'worker nunca rodou'}
+          </Badge>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <Stat label="Campanhas ativas" value={stats.activeCampaigns} />

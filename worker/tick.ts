@@ -2,7 +2,7 @@ import { AutomationError, SessionExpiredError } from '@/automation/linkedin';
 import { getCampaign } from '@/lib/db/repositories/campaigns';
 import { claimDueEnrollments, recordFailure, releaseLock } from '@/lib/db/repositories/leads';
 import { log } from '@/lib/db/repositories/logs';
-import { setAutomationPaused } from '@/lib/db/repositories/settings';
+import { setAutomationPaused, touchWorkerHeartbeat } from '@/lib/db/repositories/settings';
 import { ACTIONS } from '@/lib/activity';
 import type { CampaignRow, EnrollmentWithLead } from '@/lib/db/types';
 import type { WorkerContext } from './context';
@@ -133,6 +133,9 @@ async function processDueLeads(context: WorkerContext, summary: TickSummary): Pr
 export async function tick(context: WorkerContext): Promise<TickSummary> {
   const summary: TickSummary = { discovered: 0, processed: 0, skipped: 0, failed: 0, replies: 0 };
 
+  // O batimento é registrado mesmo com a automação pausada: o dashboard
+  // precisa distinguir "worker parado" de "worker rodando e pausado".
+  await touchWorkerHeartbeat();
   if (context.settings.automation_paused) return summary;
 
   summary.discovered = await processDiscovery(context);

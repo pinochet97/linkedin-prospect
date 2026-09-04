@@ -56,7 +56,7 @@ export default async function LeadsPage({
 
       <Card>
         <CardContent className="p-0">
-          <LeadsTable enrollments={enrollments} showCampaign={!campaign} />
+          <LeadsTable enrollments={enrollments} />
         </CardContent>
       </Card>
     </>

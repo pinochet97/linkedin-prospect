@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '@/lib/load-env';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { closePool, getPool } from '@/lib/db/client';

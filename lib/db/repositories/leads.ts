@@ -28,7 +28,8 @@ export interface EnrollResult {
 
 const LEAD_SELECT = `
   cl.*,
-  row_to_json(l.*) as lead
+  row_to_json(l.*) as lead,
+  (select count(*) from campaign_leads other where other.lead_id = cl.lead_id)::int as campaign_count
 `;
 
 const ENROLLMENT_FROM = `
@@ -36,10 +37,11 @@ const ENROLLMENT_FROM = `
   join leads l on l.id = cl.lead_id
 `;
 
-function hydrate(row: EnrollmentRow & { lead: Record<string, unknown> }): EnrollmentWithLead {
+function hydrate(row: EnrollmentRow & { lead: Record<string, unknown>; campaign_count?: number }): EnrollmentWithLead {
   const lead = row.lead as unknown as LeadRow;
   return {
     ...row,
+    campaign_count: row.campaign_count ?? 1,
     lead: {
       ...lead,
       // row_to_json devolve datas como string ISO.
@@ -134,7 +136,7 @@ export async function upsertLeadAndEnroll(
 }
 
 export async function getEnrollment(id: string): Promise<EnrollmentWithLead | null> {
-  const row = await queryOne<EnrollmentRow & { lead: Record<string, unknown> }>(
+  const row = await queryOne<EnrollmentRow & { lead: Record<string, unknown>; campaign_count?: number }>(
     `select ${LEAD_SELECT} ${ENROLLMENT_FROM} where cl.id = $1`,
     [id],
   );
@@ -176,7 +178,7 @@ export async function listEnrollments(filters: EnrollmentFilters = {}): Promise<
   values.push(filters.offset ?? 0);
   const offsetParam = `$${values.length}`;
 
-  const rows = await query<EnrollmentRow & { lead: Record<string, unknown> }>(
+  const rows = await query<EnrollmentRow & { lead: Record<string, unknown>; campaign_count?: number }>(
     `select ${LEAD_SELECT} ${ENROLLMENT_FROM}
       ${conditions.length ? `where ${conditions.join(' and ')}` : ''}
       order by cl.updated_at desc
@@ -236,7 +238,7 @@ export async function claimDueEnrollments(workerId: string, limit: number): Prom
 
   if (rows.length === 0) return [];
   const ids = rows.map((row) => row.id);
-  const hydrated = await query<EnrollmentRow & { lead: Record<string, unknown> }>(
+  const hydrated = await query<EnrollmentRow & { lead: Record<string, unknown>; campaign_count?: number }>(
     `select ${LEAD_SELECT} ${ENROLLMENT_FROM} where cl.id = any($1::uuid[]) order by cl.next_action_at asc`,
     [ids],
   );
@@ -421,7 +423,7 @@ export async function poolIsReady(): Promise<boolean> {
  * varredura periódica da caixa de entrada.
  */
 export async function listLeadsForReplyCheck(limit: number, minIntervalHours: number): Promise<EnrollmentWithLead[]> {
-  const rows = await query<EnrollmentRow & { lead: Record<string, unknown> }>(
+  const rows = await query<EnrollmentRow & { lead: Record<string, unknown>; campaign_count?: number }>(
     `select ${LEAD_SELECT} ${ENROLLMENT_FROM}
        join campaigns c on c.id = cl.campaign_id
       where c.status = 'active'

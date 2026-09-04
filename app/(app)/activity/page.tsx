@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/stat';
 import { Select } from '@/components/ui/field';
@@ -21,13 +22,14 @@ const STATUS_TONES = {
 export default async function ActivityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ campaign?: string; action?: string; status?: string }>;
+  searchParams: Promise<{ campaign?: string; action?: string; status?: string; lead?: string }>;
 }) {
-  const { campaign, action, status } = await searchParams;
+  const { campaign, action, status, lead } = await searchParams;
   const filters: LogFilters = {
     campaignId: campaign || undefined,
     action: action || undefined,
     status: (status as LogFilters['status']) || undefined,
+    leadId: lead || undefined,
     limit: 200,
   };
 
@@ -35,9 +37,20 @@ export default async function ActivityPage({
 
   return (
     <>
-      <PageHeader title="Atividade" description="Tudo que a automação executou." />
+      <PageHeader
+        title="Atividade"
+        description={lead ? 'Filtrado por um lead específico.' : 'Tudo que a automação executou.'}
+        action={
+          lead ? (
+            <Link href="/activity" className="text-sm text-muted-foreground hover:text-foreground">
+              Limpar filtro de lead
+            </Link>
+          ) : null
+        }
+      />
 
       <form className="mb-4 flex flex-wrap gap-2">
+        {lead ? <input type="hidden" name="lead" value={lead} /> : null}
         <Select name="campaign" defaultValue={campaign ?? ''} className="w-56">
           <option value="">Todas as campanhas</option>
           {campaigns.map((item) => (

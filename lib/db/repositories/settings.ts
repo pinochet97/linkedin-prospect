@@ -13,6 +13,7 @@ const DEFAULTS: SettingsRow = {
   things_to_avoid: '',
   automation_paused: false,
   paused_reason: null,
+  worker_last_tick_at: null,
   updated_at: new Date(0),
 };
 
@@ -27,6 +28,11 @@ export async function updateSettings(patch: SettingsPatch): Promise<void> {
   const statement = buildUpdate('settings', patch, { column: 'id', value: 1 });
   if (!statement) return;
   await query(statement.text, statement.values);
+}
+
+/** Batimento do worker — mostrado no dashboard. */
+export async function touchWorkerHeartbeat(): Promise<void> {
+  await query('update settings set worker_last_tick_at = now() where id = 1');
 }
 
 /** Kill switch global: impede qualquer nova ação de automação. */

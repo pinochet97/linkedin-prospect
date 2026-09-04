@@ -11,7 +11,6 @@
  *
  * Ignorado quando não há Postgres acessível.
  */
-import 'dotenv/config';
 import { afterAll, describe, expect, it } from 'vitest';
 import { MockLinkedInAdapter } from '@/automation/linkedin/mock-adapter';
 

@@ -20,6 +20,7 @@ export interface SettingsRow {
   things_to_avoid: string;
   automation_paused: boolean;
   paused_reason: string | null;
+  worker_last_tick_at: Date | null;
   updated_at: Date;
 }
 
@@ -99,6 +100,8 @@ export interface EnrollmentRow {
 
 export interface EnrollmentWithLead extends EnrollmentRow {
   lead: LeadRow;
+  /** Em quantas campanhas esta pessoa está. > 1 vira aviso de duplicidade. */
+  campaign_count: number;
 }
 
 export interface LeadMessageRow {

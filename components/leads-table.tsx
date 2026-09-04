@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
-import { StatusBadge } from '@/components/ui/badge';
+import { Badge, StatusBadge } from '@/components/ui/badge';
 import { EmptyState, Table, Td, Th } from '@/components/ui/table';
 import type { EnrollmentWithLead } from '@/lib/db/types';
 import { formatDateTime, formatRelative } from '@/lib/utils';
@@ -16,13 +16,7 @@ const NEXT_ACTION_LABELS: Record<NextAction, string> = {
   none: '—',
 };
 
-export function LeadsTable({
-  enrollments,
-  showCampaign = false,
-}: {
-  enrollments: EnrollmentWithLead[];
-  showCampaign?: boolean;
-}) {
+export function LeadsTable({ enrollments }: { enrollments: EnrollmentWithLead[] }) {
   if (enrollments.length === 0) {
     return <EmptyState>Nenhum lead aqui ainda.</EmptyState>;
   }
@@ -57,7 +51,11 @@ export function LeadsTable({
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
-              {showCampaign ? <p className="text-xs text-muted-foreground">{enrollment.campaign_id.slice(0, 8)}</p> : null}
+              {enrollment.campaign_count > 1 ? (
+                <Badge tone="warning" className="mt-1">
+                  em {enrollment.campaign_count} campanhas
+                </Badge>
+              ) : null}
             </Td>
             <Td className="max-w-72">
               <p className="truncate text-sm">{enrollment.lead.job_title ?? enrollment.lead.headline ?? '—'}</p>

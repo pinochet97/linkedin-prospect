@@ -6,7 +6,7 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     // Carrega o .env: os testes de integração precisam de DATABASE_URL.
-    setupFiles: ['dotenv/config'],
+    setupFiles: ['./tests/setup.ts'],
   },
   resolve: {
     alias: {

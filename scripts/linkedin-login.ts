@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '@/lib/load-env';
 import { resolve } from 'node:path';
 import { launchBrowser } from '@/automation/linkedin/browser';
 import { LinkedInSelectors, LinkedInUrls } from '@/automation/linkedin/selectors';

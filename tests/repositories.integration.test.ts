@@ -5,7 +5,6 @@
  *
  *   createdb linkedin_prospect && npm run db:migrate && npm test
  */
-import 'dotenv/config';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
