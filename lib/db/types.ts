@@ -90,6 +90,7 @@ export interface EnrollmentRow {
   retry_count: number;
   last_error: string | null;
   last_attempt_at: Date | null;
+  last_reply_check_at: Date | null;
   locked_at: Date | null;
   locked_by: string | null;
   created_at: Date;

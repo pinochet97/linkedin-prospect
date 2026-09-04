@@ -70,8 +70,15 @@ export interface LinkedInAdapter {
 
   sendMessage(profileUrl: string, body: string): Promise<SendMessageResult>;
 
-  /** Última mensagem RECEBIDA do lead (ignora as que nós enviamos). */
-  fetchLatestInboundMessage(profileUrl: string, since: Date | null): Promise<InboundMessage | null>;
+  /**
+   * Última mensagem RECEBIDA do lead (ignora as que nós enviamos).
+   * O nome completo é usado para identificar o remetente na conversa.
+   */
+  fetchLatestInboundMessage(
+    profileUrl: string,
+    leadFullName: string,
+    since: Date | null,
+  ): Promise<InboundMessage | null>;
 
   close(): Promise<void>;
 }

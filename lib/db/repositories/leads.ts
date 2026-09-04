@@ -367,15 +367,33 @@ export async function stopSequence(enrollmentId: string): Promise<EnrollmentRow>
   return applyFacts(enrollmentId, { sequence_stopped: true });
 }
 
-export async function updateLeadProfile(
+/**
+ * Completa o perfil com o que foi lido na página, SEM sobrescrever dados que
+ * já existem (o nome vindo da busca costuma ser mais confiável).
+ */
+export async function enrichLeadProfile(
   leadId: string,
-  patch: Partial<Pick<LeadRow, 'headline' | 'job_title' | 'company' | 'location' | 'profile_summary' | 'full_name'>>,
+  patch: Partial<Pick<LeadRow, 'headline' | 'job_title' | 'company' | 'location' | 'profile_summary'>>,
 ): Promise<void> {
-  const statement = buildUpdate('leads', { ...patch, profile_enriched_at: new Date() }, {
-    column: 'id',
-    value: leadId,
-  });
-  if (statement) await query(statement.text, statement.values);
+  await query(
+    `update leads
+        set headline        = coalesce(headline, $2),
+            job_title       = coalesce(job_title, $3),
+            company         = coalesce(company, $4),
+            location        = coalesce(location, $5),
+            profile_summary = coalesce($6, profile_summary),
+            profile_enriched_at = now(),
+            updated_at = now()
+      where id = $1`,
+    [
+      leadId,
+      patch.headline ?? null,
+      patch.job_title ?? null,
+      patch.company ?? null,
+      patch.location ?? null,
+      patch.profile_summary ?? null,
+    ],
+  );
 }
 
 /** Campanhas (além desta) em que a mesma pessoa já aparece. */
@@ -396,4 +414,28 @@ export async function poolIsReady(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Leads que estão em sequência e ainda não responderam — candidatos à
+ * varredura periódica da caixa de entrada.
+ */
+export async function listLeadsForReplyCheck(limit: number, minIntervalHours: number): Promise<EnrollmentWithLead[]> {
+  const rows = await query<EnrollmentRow & { lead: Record<string, unknown> }>(
+    `select ${LEAD_SELECT} ${ENROLLMENT_FROM}
+       join campaigns c on c.id = cl.campaign_id
+      where c.status = 'active'
+        and cl.replied_at is null
+        and cl.sequence_stopped = false
+        and cl.first_message_sent_at is not null
+        and (cl.last_reply_check_at is null or cl.last_reply_check_at < now() - ($2 || ' hours')::interval)
+      order by cl.last_reply_check_at asc nulls first
+      limit $1`,
+    [limit, minIntervalHours],
+  );
+  return rows.map(hydrate);
+}
+
+export async function touchReplyCheck(enrollmentId: string): Promise<void> {
+  await query('update campaign_leads set last_reply_check_at = now() where id = $1', [enrollmentId]);
 }

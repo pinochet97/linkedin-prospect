@@ -79,6 +79,7 @@ export const LinkedInSelectors = {
   ],
   messageSendButton: ['button.msg-form__send-button', 'button[type="submit"].msg-form__send-btn'],
   messageThreadItem: ['li.msg-s-message-list__event', 'div.msg-s-event-listitem'],
-  messageThreadItemOutgoing: 'msg-s-event-listitem--other',
+  messageThreadSenderName: ['.msg-s-message-group__name', '.msg-s-event-listitem__name'],
   messageThreadBody: ['p.msg-s-event-listitem__body', 'div.msg-s-event__content p'],
+  messageThreadTimestamp: ['time.msg-s-message-group__timestamp', 'time'],
 } as const;

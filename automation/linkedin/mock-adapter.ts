@@ -18,13 +18,18 @@ import {
  *
  * O comportamento é determinístico (derivado de um hash da URL do perfil), então
  * a mesma pessoa sempre reage igual e os testes não ficam instáveis.
+ *
+ * Este adapter ignora DRY_RUN de propósito: nada aqui chega ao LinkedIn, então
+ * ele já é, por natureza, uma simulação. Os logs registram `adapter: "mock"`
+ * para não confundir com um envio real.
  */
 
 interface MockState {
   requests: Record<string, { requestedAt: string; checks: number; note: string | null }>;
   connected: Record<string, string>;
   messagesSent: Record<string, string[]>;
-  replies: Record<string, { text: string; receivedAt: string }>;
+  /** receivedAt fica null até a primeira leitura: a resposta "chega" depois da nossa mensagem. */
+  replies: Record<string, { text: string; receivedAt: string | null }>;
 }
 
 const EMPTY_STATE: MockState = { requests: {}, connected: {}, messagesSent: {}, replies: {} };
@@ -166,7 +171,7 @@ export class MockLinkedInAdapter implements LinkedInAdapter {
     if (willReply && !this.state.replies[profileUrl]) {
       this.state.replies[profileUrl] = {
         text: 'Opa, tudo bem? Faz sentido sim, me manda mais detalhes.',
-        receivedAt: new Date().toISOString(),
+        receivedAt: null,
       };
     }
 
@@ -174,9 +179,20 @@ export class MockLinkedInAdapter implements LinkedInAdapter {
     return { outcome: 'sent' };
   }
 
-  async fetchLatestInboundMessage(profileUrl: string, since: Date | null): Promise<InboundMessage | null> {
+  async fetchLatestInboundMessage(
+    profileUrl: string,
+    _leadFullName: string,
+    since: Date | null,
+  ): Promise<InboundMessage | null> {
     const reply = this.state.replies[profileUrl];
     if (!reply) return null;
+
+    // A resposta é datada na primeira leitura — sempre depois do nosso envio.
+    if (!reply.receivedAt) {
+      reply.receivedAt = new Date().toISOString();
+      this.save();
+    }
+
     const receivedAt = new Date(reply.receivedAt);
     if (since && receivedAt <= since) return null;
     return { text: reply.text, receivedAt };
@@ -193,7 +209,7 @@ export class MockLinkedInAdapter implements LinkedInAdapter {
   }
 
   forceReply(profileUrl: string, text: string): void {
-    this.state.replies[profileUrl] = { text, receivedAt: new Date().toISOString() };
+    this.state.replies[profileUrl] = { text, receivedAt: null };
     this.save();
   }
 }
