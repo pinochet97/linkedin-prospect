@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* Paleta B2B minimalista: neutros + um azul de acento. Light e dark. */
+:root {
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-muted: #f1f3f6;
+  --border: #e3e6eb;
+  --foreground: #14171f;
+  --muted-foreground: #656d7c;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --success: #0f9d58;
+  --warning: #b7791f;
+  --danger: #d64545;
+}
+
+.dark {
+  --background: #0b0d11;
+  --surface: #14171d;
+  --surface-muted: #1b1f27;
+  --border: #262b35;
+  --foreground: #e8eaed;
+  --muted-foreground: #99a1b0;
+  --primary: #4d82f3;
+  --primary-foreground: #0b0d11;
+  --success: #35c07f;
+  --warning: #e0a641;
+  --danger: #f0736a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
